@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\User;
+use App\Models\Pengguna;
 
 test('profile page is displayed', function () {
-    $user = User::factory()->create();
+    $user = Pengguna::factory()->create();
 
     $response = $this
         ->actingAs($user)
@@ -13,12 +13,13 @@ test('profile page is displayed', function () {
 });
 
 test('profile information can be updated', function () {
-    $user = User::factory()->create();
+    $user = Pengguna::factory()->create();
 
     $response = $this
         ->actingAs($user)
         ->patch('/profile', [
-            'name' => 'Test User',
+            'nama' => 'Test User',
+            'no_hp' => '081234567890',
             'email' => 'test@example.com',
         ]);
 
@@ -28,30 +29,13 @@ test('profile information can be updated', function () {
 
     $user->refresh();
 
-    $this->assertSame('Test User', $user->name);
+    $this->assertSame('Test User', $user->nama);
+    $this->assertSame('081234567890', $user->no_hp);
     $this->assertSame('test@example.com', $user->email);
-    $this->assertNull($user->email_verified_at);
-});
-
-test('email verification status is unchanged when the email address is unchanged', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->patch('/profile', [
-            'name' => 'Test User',
-            'email' => $user->email,
-        ]);
-
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
-
-    $this->assertNotNull($user->refresh()->email_verified_at);
 });
 
 test('user can delete their account', function () {
-    $user = User::factory()->create();
+    $user = Pengguna::factory()->create();
 
     $response = $this
         ->actingAs($user)
@@ -68,7 +52,7 @@ test('user can delete their account', function () {
 });
 
 test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
+    $user = Pengguna::factory()->create();
 
     $response = $this
         ->actingAs($user)

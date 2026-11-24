@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Pengguna;
+
 test('registration screen can be rendered', function () {
     $response = $this->get('/register');
 
@@ -16,4 +18,10 @@ test('new users can register', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+
+    $pengguna = Pengguna::firstWhere('email', 'test@example.com');
+
+    expect($pengguna->nama)->toBe('Test User')
+        ->and($pengguna->peran)->toBe(Pengguna::PERAN_CUSTOMER)
+        ->and($pengguna->status_akun)->toBe(Pengguna::STATUS_MENUNGGU_AKTIVASI);
 });

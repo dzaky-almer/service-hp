@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Pengguna;
 use Illuminate\Support\Facades\Route;
 
 beforeEach(function () {
@@ -8,10 +8,10 @@ beforeEach(function () {
     Route::middleware(['web', 'akun.aktif'])->get('/uji-aktif', fn () => 'ok');
 });
 
-/** User sementara; kolom peran/status_akun ada di migrasi pengguna. */
-function penggunaUji(?string $peran, string $status = 'aktif'): User
+/** Pengguna sementara; kolom peran/status_akun ada di migrasi pengguna. */
+function penggunaUji(?string $peran, string $status = 'aktif'): Pengguna
 {
-    $u = new User;
+    $u = new Pengguna;
     $u->peran = $peran;
     $u->status_akun = $status;
 
