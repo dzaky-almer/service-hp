@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('id_servis')->constrained('servis', 'id_servis')->restrictOnDelete();
             $table->string('dari_status', 30)->nullable();
             $table->string('ke_status', 30);
-            $table->unsignedInteger('diubah_oleh')->nullable();
+            $table->foreignId('diubah_oleh')->nullable();
             $table->string('alasan', 255)->nullable();
             $table->dateTime('waktu');
 

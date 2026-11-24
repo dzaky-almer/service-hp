@@ -14,7 +14,7 @@ return new class extends Migration
             $table->smallInteger('versi');
             $table->string('kategori_kerusakan', 60);
             $table->text('hasil');
-            $table->unsignedInteger('dibuat_oleh');
+            $table->foreignId('dibuat_oleh');
             $table->dateTime('waktu');
 
             $table->unique(['id_servis', 'versi'], 'uq_diagnosis_versi');

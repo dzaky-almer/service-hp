@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('id_servis')->constrained('servis', 'id_servis')->restrictOnDelete();
             $table->enum('jenis', ['masuk', 'hasil']);
             $table->string('path_file', 255);
-            $table->unsignedInteger('diunggah_oleh');
+            $table->foreignId('diunggah_oleh');
             $table->dateTime('waktu');
         });
     }

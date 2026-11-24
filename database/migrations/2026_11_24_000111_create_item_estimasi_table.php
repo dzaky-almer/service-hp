@@ -14,8 +14,8 @@ return new class extends Migration
             $table->foreignId('id_estimasi')->constrained('estimasi', 'id_estimasi')->restrictOnDelete();
             $table->enum('jenis', ['jasa', 'sparepart']);
             $table->string('deskripsi', 150);
-            $table->unsignedInteger('id_sparepart')->nullable();
-            $table->unsignedInteger('id_tarif')->nullable();
+            $table->foreignId('id_sparepart')->nullable();
+            $table->foreignId('id_tarif')->nullable();
             $table->integer('jumlah')->default(1);
             $table->decimal('harga_satuan_salinan', 12, 2);
         });

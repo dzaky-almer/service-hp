@@ -13,10 +13,10 @@ return new class extends Migration
             $table->foreignId('id_servis')->constrained('servis', 'id_servis')->restrictOnDelete();
             $table->smallInteger('versi');
             $table->enum('status', ['draf', 'dikirim', 'disetujui', 'ditolak', 'digantikan'])->default('draf');
-            $table->unsignedInteger('dibuat_oleh');
-            $table->unsignedInteger('divalidasi_oleh')->nullable();
+            $table->foreignId('dibuat_oleh');
+            $table->foreignId('divalidasi_oleh')->nullable();
             $table->dateTime('dikirim_pada')->nullable();
-            $table->unsignedInteger('diputuskan_oleh')->nullable();
+            $table->foreignId('diputuskan_oleh')->nullable();
             $table->dateTime('diputuskan_pada')->nullable();
             $table->string('catatan_customer', 255)->nullable();
             $table->dateTime('dibuat_pada');
