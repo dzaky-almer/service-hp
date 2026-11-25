@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Pengguna;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +17,7 @@ class AkunAktif
     {
         $status = $request->user()?->status_akun;
 
-        if ($status !== null && $status !== 'aktif') {
+        if ($status !== null && $status !== Pengguna::STATUS_AKTIF) {
             abort(403);
         }
 

@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'peran' => PeranMiddleware::class,
             'akun.aktif' => AkunAktif::class,
         ]);
+
+        // Akun non-aktif ditolak di semua route web. Kecuali logout, agar sesi
+        // pengguna yang dinonaktifkan di tengah jalan tetap bisa ditutup.
+        $middleware->web(append: [AkunAktif::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -32,3 +32,34 @@ it('menolak akun nonaktif dan menunggu aktivasi', function () {
     $this->actingAs(penggunaUji('admin', 'menunggu_aktivasi'))->get('/uji-aktif')->assertForbidden();
     $this->actingAs(penggunaUji('admin'))->get('/uji-aktif')->assertOk();
 });
+
+it('tamu diarahkan ke login dari halaman ber-auth', function () {
+    $this->get('/dashboard')->assertRedirect('/login');
+});
+
+it('mengizinkan akun aktif membuka dashboard', function () {
+    $this->actingAs(Pengguna::factory()->create())->get('/dashboard')->assertOk();
+});
+
+it('menolak akun nonaktif dan menunggu aktivasi di dashboard', function (string $status) {
+    $this->actingAs(Pengguna::factory()->create(['status_akun' => $status]))
+        ->get('/dashboard')
+        ->assertForbidden();
+})->with([
+    'nonaktif' => Pengguna::STATUS_NONAKTIF,
+    'menunggu aktivasi' => Pengguna::STATUS_MENUNGGU_AKTIVASI,
+]);
+
+it('menolak akun nonaktif di halaman profil', function () {
+    $this->actingAs(Pengguna::factory()->create(['status_akun' => Pengguna::STATUS_NONAKTIF]))
+        ->get('/profile')
+        ->assertForbidden();
+});
+
+it('tetap mengizinkan akun nonaktif logout', function () {
+    $this->actingAs(Pengguna::factory()->create(['status_akun' => Pengguna::STATUS_NONAKTIF]))
+        ->post('/logout')
+        ->assertRedirect('/');
+
+    $this->assertGuest();
+});

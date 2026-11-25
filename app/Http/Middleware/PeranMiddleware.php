@@ -10,6 +10,7 @@ class PeranMiddleware
 {
     /**
      * Batasi route ke peran tertentu, mis. `peran:admin,owner`.
+     * Peran yang tidak cocok dapat 403 tanpa menyebut peran yang dibutuhkan.
      */
     public function handle(Request $request, Closure $next, string ...$peran): Response
     {
