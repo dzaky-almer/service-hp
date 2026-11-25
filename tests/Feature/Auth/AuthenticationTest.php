@@ -166,6 +166,38 @@ test('login sukses menghapus hitungan percobaan gagal', function () {
     }
 });
 
+test('logout menghapus sesi di server', function () {
+    $user = Pengguna::factory()->create();
+
+    $this->actingAs($user)->withSession(['data_uji' => 'tersimpan']);
+    expect(session('data_uji'))->toBe('tersimpan');
+
+    $response = $this->post('/logout');
+
+    $this->assertGuest();
+    $response->assertRedirect('/');
+    expect(session('data_uji'))->toBeNull();
+});
+
+test('logout mengganti id session dan csrf token', function () {
+    $user = Pengguna::factory()->create();
+
+    $this->actingAs($user)->get('/dashboard');
+    $idSebelum = session()->getId();
+    $tokenSebelum = session()->token();
+
+    $this->post('/logout');
+
+    expect(session()->getId())->not->toBe($idSebelum)
+        ->and(session()->token())->not->toBe($tokenSebelum);
+});
+
+test('tamu yang membuka logout diarahkan ke login', function () {
+    $this->post('/logout')->assertRedirect('/login');
+
+    $this->assertGuest();
+});
+
 test('users can logout', function () {
     $user = Pengguna::factory()->create();
 
