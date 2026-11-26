@@ -32,6 +32,18 @@ class Pengguna extends Authenticatable
 
     public const DIBUAT_PADA = 'dibuat_pada';
 
+    /** Label tampilan status akun; satu sumber untuk semua halaman. */
+    public const LABEL_STATUS_AKUN = [
+        self::STATUS_MENUNGGU_AKTIVASI => 'Menunggu Aktivasi',
+        self::STATUS_AKTIF => 'Aktif',
+        self::STATUS_NONAKTIF => 'Nonaktif',
+    ];
+
+    public function labelStatusAkun(): string
+    {
+        return self::LABEL_STATUS_AKUN[$this->status_akun] ?? $this->status_akun;
+    }
+
     protected $table = 'pengguna';
 
     protected $primaryKey = 'id_pengguna';
