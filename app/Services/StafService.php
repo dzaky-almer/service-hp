@@ -42,4 +42,29 @@ class StafService
             return $staf;
         });
     }
+
+    /**
+     * Buat akun Owner (SECURITY.md §1): bukan lewat halaman publik dan bukan
+     * lewat undangan, langsung berstatus `aktif` dengan password yang
+     * ditetapkan pemanggil. Dipakai command `owner:buat`.
+     */
+    public function buatOwner(string $nama, string $email, string $password): Pengguna
+    {
+        return DB::transaction(function () use ($nama, $email, $password): Pengguna {
+            $pengguna = new Pengguna(['nama' => $nama, 'email' => $email]);
+            $pengguna->peran = Pengguna::PERAN_OWNER;
+            $pengguna->status_akun = Pengguna::STATUS_AKTIF;
+            $pengguna->password = $password;                     // cast `hashed` di model
+            $pengguna->save();
+
+            // Pelaku null: dijalankan dari CLI, bukan oleh pengguna yang login.
+            $this->audit->catat('buat_owner', $pengguna, null, [
+                'peran' => Pengguna::PERAN_OWNER,
+                'email' => $email,
+                'status_akun' => Pengguna::STATUS_AKTIF,
+            ]);
+
+            return $pengguna;
+        });
+    }
 }
