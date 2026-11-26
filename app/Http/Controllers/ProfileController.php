@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Pelanggan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -26,11 +28,17 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $pengguna = $request->user();
+        $data = $request->validated();
 
-        $request->user()->save();
+        DB::transaction(function () use ($pengguna, $data) {
+            $pengguna->fill($data)->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+            // Baris pelanggan tertaut ikut diperbarui supaya data tetap sinkron.
+            Pelanggan::where('id_pengguna', $pengguna->id_pengguna)->update($data);
+        });
+
+        return Redirect::route('profil.edit')->with('status', 'profile-updated');
     }
 
     /**

@@ -52,7 +52,7 @@ it('menolak akun nonaktif dan menunggu aktivasi di dashboard', function (string 
 
 it('menolak akun nonaktif di halaman profil', function () {
     $this->actingAs(Pengguna::factory()->create(['status_akun' => Pengguna::STATUS_NONAKTIF]))
-        ->get('/profile')
+        ->get('/profil')
         ->assertForbidden();
 });
 

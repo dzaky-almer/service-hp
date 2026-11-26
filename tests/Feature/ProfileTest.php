@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Pelanggan;
 use App\Models\Pengguna;
 
 test('profile page is displayed', function () {
@@ -7,7 +8,7 @@ test('profile page is displayed', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/profile');
+        ->get('/profil');
 
     $response->assertOk();
 });
@@ -17,7 +18,7 @@ test('profile information can be updated', function () {
 
     $response = $this
         ->actingAs($user)
-        ->patch('/profile', [
+        ->put('/profil', [
             'nama' => 'Test User',
             'no_hp' => '081234567890',
             'email' => 'test@example.com',
@@ -25,7 +26,7 @@ test('profile information can be updated', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertRedirect('/profil');
 
     $user->refresh();
 
@@ -34,12 +35,94 @@ test('profile information can be updated', function () {
     $this->assertSame('test@example.com', $user->email);
 });
 
+test('profile update syncs linked pelanggan row', function () {
+    $user = Pengguna::factory()->create();
+    $pelanggan = Pelanggan::create([
+        'id_pengguna' => $user->id_pengguna,
+        'nama' => $user->nama,
+        'no_hp' => $user->no_hp,
+        'email' => $user->email,
+    ]);
+
+    $this->actingAs($user)->put('/profil', [
+        'nama' => 'Nama Baru',
+        'no_hp' => '081200000001',
+        'email' => 'baru@example.com',
+    ])->assertSessionHasNoErrors();
+
+    $pelanggan->refresh();
+
+    $this->assertSame('Nama Baru', $pelanggan->nama);
+    $this->assertSame('081200000001', $pelanggan->no_hp);
+    $this->assertSame('baru@example.com', $pelanggan->email);
+});
+
+test('profile update fails when no hp belongs to another pengguna', function () {
+    $user = Pengguna::factory()->create();
+    $lain = Pengguna::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profil')
+        ->put('/profil', [
+            'nama' => $user->nama,
+            'no_hp' => $lain->no_hp,
+            'email' => $user->email,
+        ]);
+
+    $response->assertSessionHasErrors(['no_hp' => 'No. HP sudah terdaftar.']);
+});
+
+test('profile update fails when no hp belongs to pelanggan without account', function () {
+    $user = Pengguna::factory()->create();
+    Pelanggan::create([
+        'nama' => 'Pelanggan Walk-in',
+        'no_hp' => '081200000002',
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profil')
+        ->put('/profil', [
+            'nama' => $user->nama,
+            'no_hp' => '081200000002',
+            'email' => $user->email,
+        ]);
+
+    $response->assertSessionHasErrors(['no_hp' => 'No. HP sudah terdaftar.']);
+});
+
+test('profile update fails when email belongs to another pengguna', function () {
+    $user = Pengguna::factory()->create();
+    $lain = Pengguna::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->from('/profil')
+        ->put('/profil', [
+            'nama' => $user->nama,
+            'no_hp' => $user->no_hp,
+            'email' => $lain->email,
+        ]);
+
+    $response->assertSessionHasErrors('email');
+});
+
+test('profile update validates required fields', function () {
+    $user = Pengguna::factory()->create();
+
+    $this->actingAs($user)
+        ->from('/profil')
+        ->put('/profil', ['nama' => '', 'email' => ''])
+        ->assertSessionHasErrors(['nama', 'email']);
+});
+
 test('user can delete their account', function () {
     $user = Pengguna::factory()->create();
 
     $response = $this
         ->actingAs($user)
-        ->delete('/profile', [
+        ->delete('/profil', [
             'password' => 'password',
         ]);
 
@@ -56,14 +139,13 @@ test('correct password must be provided to delete account', function () {
 
     $response = $this
         ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
+        ->from('/profil')
+        ->delete('/profil', [
             'password' => 'wrong-password',
         ]);
 
     $response
-        ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
+        ->assertSessionHasErrorsIn('userDeletion', 'password');
 
     $this->assertNotNull($user->fresh());
 });
