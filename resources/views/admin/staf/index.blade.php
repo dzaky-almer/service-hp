@@ -67,6 +67,7 @@
                             <th class="px-4 py-3 font-medium">Peran</th>
                             <th class="px-4 py-3 font-medium">Status akun</th>
                             <th class="px-4 py-3 font-medium">Undangan</th>
+                            <th class="px-4 py-3 font-medium">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -88,10 +89,28 @@
                                         Berlaku sampai {{ tanggal($undanganTerakhir->kedaluwarsa_pada) }}
                                     @endif
                                 </td>
+                                <td class="px-4 py-3">
+                                    @if ($orang->peran === \App\Models\Pengguna::PERAN_OWNER
+                                        || $orang->status_akun === \App\Models\Pengguna::STATUS_MENUNGGU_AKTIVASI
+                                        || $orang->is(auth()->user()))
+                                        -
+                                    @else
+                                        @php($statusBaru = $orang->status_akun === \App\Models\Pengguna::STATUS_AKTIF
+                                            ? \App\Models\Pengguna::STATUS_NONAKTIF
+                                            : \App\Models\Pengguna::STATUS_AKTIF)
+                                        <form method="POST" action="{{ route('admin.staf.status', $orang) }}">
+                                            @csrf
+                                            <input type="hidden" name="status_akun" value="{{ $statusBaru }}">
+                                            <button type="submit" class="text-indigo-600 hover:underline">
+                                                {{ $statusBaru === \App\Models\Pengguna::STATUS_AKTIF ? 'Aktifkan' : 'Nonaktifkan' }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td class="px-4 py-3 text-gray-500" colspan="5">Belum ada staf.</td>
+                                <td class="px-4 py-3 text-gray-500" colspan="6">Belum ada staf.</td>
                             </tr>
                         @endforelse
                     </tbody>

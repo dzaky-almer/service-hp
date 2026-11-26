@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'peran:owner'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('staf', [StafController::class, 'index'])->name('staf.index');
     Route::post('staf', [StafController::class, 'store'])->name('staf.store');
+    Route::post('staf/{pengguna}/status', [StafController::class, 'status'])->name('staf.status');
 });
 
 require __DIR__.'/auth.php';
