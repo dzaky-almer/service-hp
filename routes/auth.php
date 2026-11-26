@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AktivasiAkunController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -30,6 +31,13 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password/{token}', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // Aktivasi akun undangan (fitur 6): token di path, berlaku sekali pakai 72 jam.
+    Route::get('aktivasi/{token}', [AktivasiAkunController::class, 'create'])
+        ->name('aktivasi.create');
+
+    Route::post('aktivasi/{token}', [AktivasiAkunController::class, 'store'])
+        ->name('aktivasi.store');
 });
 
 Route::middleware('auth')->group(function () {

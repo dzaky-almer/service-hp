@@ -14,7 +14,7 @@ class UndanganAktivasi extends Notification
 
     public function __construct(public Pengguna $pengguna, public string $token)
     {
-        $this->tautan = url('/aktivasi/'.$token);
+        $this->tautan = route('aktivasi.create', ['token' => $token]);
     }
 
     /**

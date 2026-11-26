@@ -44,4 +44,54 @@ class UndanganService
             return ['pengguna' => $pengguna, 'undangan' => $undangan, 'token' => $token];
         });
     }
+
+    /**
+     * Cari undangan yang masih berlaku dari token asli (fitur 6). Token asli
+     * hanya dibandingkan lewat hash-nya, jadi tidak ada token mentah di DB.
+     *
+     * @param  bool  $kunci  kunci baris (`FOR UPDATE`) saat dipakai di dalam transaksi
+     */
+    public function cariUndanganValid(string $token, bool $kunci = false): ?UndanganAkun
+    {
+        $undangan = UndanganAkun::query()
+            ->where('token_hash', hash('sha256', $token))
+            ->when($kunci, fn ($q) => $q->lockForUpdate())
+            ->first();
+
+        return $undangan?->masihBerlaku() ? $undangan : null;
+    }
+
+    /**
+     * Aktifkan akun lewat token undangan (fitur 6): pengguna menetapkan password
+     * sendiri, status jadi `aktif`, undangan ditandai terpakai sekali (SECURITY.md §1).
+     * Mengembalikan `null` bila token tidak valid, sudah dipakai, atau kedaluwarsa.
+     */
+    public function aktifkanAkun(string $token, string $password): ?Pengguna
+    {
+        return DB::transaction(function () use ($token, $password): ?Pengguna {
+            // Baris dikunci dulu supaya dua permintaan bersamaan tidak dua-duanya lolos.
+            $undangan = $this->cariUndanganValid($token, kunci: true);
+
+            if ($undangan === null) {
+                return null;
+            }
+
+            $pengguna = $undangan->pengguna;
+            $pengguna->password = $password;                    // cast `hashed` di model
+            $pengguna->status_akun = Pengguna::STATUS_AKTIF;
+            $pengguna->save();
+
+            $undangan->dipakai_pada = now();
+            $undangan->save();
+
+            $this->audit->catat('aktivasi_akun', $pengguna, [
+                'status_akun' => Pengguna::STATUS_MENUNGGU_AKTIVASI,
+            ], [
+                'status_akun' => Pengguna::STATUS_AKTIF,
+                'id_undangan' => $undangan->id_undangan,
+            ], $pengguna);
+
+            return $pengguna;
+        });
+    }
 }

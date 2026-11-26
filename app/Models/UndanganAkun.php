@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UndanganAkun extends Model
 {
@@ -23,6 +24,22 @@ class UndanganAkun extends Model
         'dipakai_pada',
         'dibuat_oleh',
     ];
+
+    /**
+     * Pemilik undangan.
+     *
+     * @return BelongsTo<Pengguna, $this>
+     */
+    public function pengguna(): BelongsTo
+    {
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id_pengguna');
+    }
+
+    /** Undangan hanya berlaku sekali pakai dan sampai masa berlakunya lewat. */
+    public function masihBerlaku(): bool
+    {
+        return $this->dipakai_pada === null && $this->kedaluwarsa_pada->isFuture();
+    }
 
     /**
      * Get the attributes that should be cast.
