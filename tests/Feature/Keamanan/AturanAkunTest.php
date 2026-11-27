@@ -140,8 +140,8 @@ test('token undangan hanya tersimpan sebagai hash dan berbeda tiap undangan', fu
     $owner = ownerAman();
     $undanganService = app(UndanganService::class);
 
-    $pertama = $undanganService->undangStaf('Staf Satu', 'staf.satu@example.com', null, Pengguna::PERAN_TEKNISI, $owner);
-    $kedua = $undanganService->undangStaf('Staf Dua', 'staf.dua@example.com', null, Pengguna::PERAN_ADMIN, $owner);
+    $pertama = $undanganService->undangAkun('Staf Satu', 'staf.satu@example.com', null, Pengguna::PERAN_TEKNISI, $owner);
+    $kedua = $undanganService->undangAkun('Staf Dua', 'staf.dua@example.com', null, Pengguna::PERAN_ADMIN, $owner);
 
     $token = $pertama['token'];
 

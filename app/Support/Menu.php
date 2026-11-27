@@ -59,6 +59,7 @@ final class Menu
             'admin', 'owner' => [
                 ['Dashboard', 'admin.dashboard'],
                 ['Servis', 'admin.servis.index', 'admin.servis.*'],
+                ['Pekerjaan', 'admin.pekerjaan.index', 'admin.pekerjaan.*'],
                 ['Pelanggan', 'admin.pelanggan.index', 'admin.pelanggan.*'],
                 ['Spare Part', 'admin.sparepart.index'],
                 ['Laporan', 'admin.laporan.servis', 'admin.laporan.*'],

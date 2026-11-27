@@ -42,7 +42,7 @@ class StafController extends Controller
     {
         $data = $request->validated();
 
-        $hasil = $undanganService->undangStaf(
+        $hasil = $undanganService->undangAkun(
             $data['nama'],
             $data['email'],
             $data['no_hp'] ?? null,

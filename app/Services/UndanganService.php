@@ -11,14 +11,17 @@ class UndanganService
     public function __construct(private AuditService $audit) {}
 
     /**
-     * Undang staf baru (fitur 5, BR-01): buat `pengguna` berstatus
+     * Undang akun baru (fitur 5 dan 11, BR-01): buat `pengguna` berstatus
      * `menunggu_aktivasi` tanpa password, plus satu token undangan yang hanya
      * hash-nya disimpan (SECURITY.md §1). Token asli dikembalikan sekali agar
      * pemanggil dapat mengirimkannya ke penerima.
      *
+     * Dipakai dua jalur: undangan staf oleh Owner (peran admin/teknisi) dan
+     * undangan akun untuk pelanggan toko yang belum punya akun (peran customer).
+     *
      * @return array{pengguna: Pengguna, undangan: UndanganAkun, token: string}
      */
-    public function undangStaf(string $nama, string $email, ?string $noHp, string $peran, Pengguna $pembuat): array
+    public function undangAkun(string $nama, string $email, ?string $noHp, string $peran, Pengguna $pembuat): array
     {
         return DB::transaction(function () use ($nama, $email, $noHp, $peran, $pembuat): array {
             $pengguna = new Pengguna(['nama' => $nama, 'email' => $email, 'no_hp' => $noHp]);
@@ -35,11 +38,13 @@ class UndanganService
                 'dibuat_oleh' => $pembuat->id_pengguna,
             ]);
 
-            $this->audit->catat('undang_staf', $pengguna, null, [
-                'peran' => $peran,
-                'email' => $email,
-                'id_undangan' => $undangan->id_undangan,
-            ], $pembuat);
+            $this->audit->catat(
+                $peran === Pengguna::PERAN_CUSTOMER ? 'undang_pelanggan' : 'undang_staf',
+                $pengguna,
+                null,
+                ['peran' => $peran, 'email' => $email, 'id_undangan' => $undangan->id_undangan],
+                $pembuat,
+            );
 
             return ['pengguna' => $pengguna, 'undangan' => $undangan, 'token' => $token];
         });
