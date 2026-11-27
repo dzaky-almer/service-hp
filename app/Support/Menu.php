@@ -54,7 +54,7 @@ final class Menu
                 ['Dashboard', 'teknisi.dashboard'],
                 ['Pekerjaan', 'teknisi.pekerjaan.index', 'teknisi.pekerjaan.*'],
                 ['Spare Part', 'teknisi.sparepart.index'],
-                ['Laporan', 'teknisi.laporan'],
+                ['Laporan', 'teknisi.laporan.servis', 'teknisi.laporan.*'],
             ],
             'admin', 'owner' => [
                 ['Dashboard', 'admin.dashboard'],
@@ -63,6 +63,7 @@ final class Menu
                 ['Pelanggan', 'admin.pelanggan.index', 'admin.pelanggan.*'],
                 ['Spare Part', 'admin.sparepart.index'],
                 ['Laporan', 'admin.laporan.servis', 'admin.laporan.*'],
+                ['Audit', 'admin.audit.index', 'admin.audit.*'],
                 ...($peran === 'owner' ? [
                     ['Staf', 'admin.staf.index', 'admin.staf.*'],
                     ['Pengaturan', 'admin.pengaturan.edit'],

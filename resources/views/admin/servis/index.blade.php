@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Servis</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ ($terlambat ?? false) ? 'Servis lewat SLA' : 'Servis' }}</h2>
             <a href="{{ route('admin.servis.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-xs font-semibold uppercase rounded-md hover:bg-gray-700">
                 Servis baru
             </a>
@@ -10,10 +10,7 @@
 
     <div class="py-8">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">{{ session('status') }}</div>
-            @endif
-
+            @unless ($terlambat ?? false)
             {{-- Fitur 16: cari nomor servis, kode tracking, nama/no. HP pelanggan, merek/model. --}}
             <form method="GET" action="{{ route('admin.servis.index') }}" class="bg-white shadow sm:rounded-lg p-4 flex flex-wrap items-end gap-3">
                 <div class="grow">
@@ -32,6 +29,7 @@
                 </div>
                 <x-primary-button>Cari</x-primary-button>
             </form>
+            @endunless
 
             <div class="bg-white shadow sm:rounded-lg overflow-x-auto">
                 <table class="min-w-full text-sm">

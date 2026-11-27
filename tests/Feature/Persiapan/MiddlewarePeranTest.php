@@ -38,7 +38,9 @@ it('tamu diarahkan ke login dari halaman ber-auth', function () {
 });
 
 it('mengizinkan akun aktif membuka dashboard', function () {
-    $this->actingAs(Pengguna::factory()->create())->get('/dashboard')->assertOk();
+    $this->actingAs(Pengguna::factory()->create())
+        ->get('/dashboard')
+        ->assertRedirect(route('pelanggan.dashboard'));
 });
 
 it('menolak akun nonaktif dan menunggu aktivasi di dashboard', function (string $status) {

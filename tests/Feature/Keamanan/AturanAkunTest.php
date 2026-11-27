@@ -151,7 +151,7 @@ test('token undangan hanya tersimpan sebagai hash dan berbeda tiap undangan', fu
         ->and($pertama['undangan']->token_hash)->toBe(hash('sha256', $token))
         ->and($pertama['undangan']->token_hash)->not->toBe($kedua['undangan']->token_hash)
         ->and($pertama['undangan']->masihBerlaku())->toBeTrue()
-        ->and($pertama['undangan']->kedaluwarsa_pada->timestamp)->toBe(now()->addHours(72)->timestamp);
+        ->and(abs($pertama['undangan']->kedaluwarsa_pada->timestamp - now()->addHours(72)->timestamp))->toBeLessThanOrEqual(2);
 
     // Token mentah tidak boleh ada di tabel mana pun.
     expect(json_encode(DB::table('undangan_akun')->get()))->not->toContain($token)

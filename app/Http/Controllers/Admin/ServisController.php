@@ -62,6 +62,18 @@ class ServisController extends Controller
         return view('admin.servis.index', compact('daftar', 'cari', 'status'));
     }
 
+    /** Servis yang lewat SLA (fitur 54). */
+    public function terlambat(): View
+    {
+        return view('admin.servis.index', [
+            'daftar' => Servis::query()->terlambat()->with(['pelanggan', 'teknisi'])
+                ->orderBy('tanggal_masuk')->paginate(20),
+            'cari' => '',
+            'status' => '',
+            'terlambat' => true,
+        ]);
+    }
+
     public function create(): View
     {
         return view('admin.servis.create', [
