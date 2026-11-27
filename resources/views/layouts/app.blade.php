@@ -27,6 +27,31 @@
                 </header>
             @endisset
 
+            <!-- Pesan hasil aksi dan galat validasi, satu tempat untuk semua halaman -->
+            @php
+                $status = session('status');
+                $statusKhusus = in_array($status, ['profile-updated', 'password-updated'], true);
+            @endphp
+            @if ($status && ! $statusKhusus)
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded" role="status">
+                        {{ $status }}
+                    </div>
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded" role="alert">
+                        <p class="font-semibold">Periksa kembali isian berikut:</p>
+                        <ul class="mt-1 list-disc list-inside text-sm">
+                            @foreach ($errors->all() as $galat)
+                                <li>{{ $galat }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <!-- Page Content -->
             <main>
                 {{ $slot }}

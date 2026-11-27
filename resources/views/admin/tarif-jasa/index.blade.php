@@ -5,12 +5,6 @@
 
     <div class="py-8">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
-                    {{ session('status') }}
-                </div>
-            @endif
-
             @if ($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
                     {{ $errors->first() }}
@@ -44,6 +38,7 @@
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 mb-4">Daftar tarif</h3>
 
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-gray-500 border-b">
                         <tr>
@@ -114,6 +109,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

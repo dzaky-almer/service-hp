@@ -1,58 +1,106 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistem Manajemen Servis Barang
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web untuk bengkel servis perangkat (HP, laptop, tablet, konsol, dll).
+Mengelola pelanggan, penerimaan servis, diagnosis, estimasi biaya, pengerjaan,
+pembayaran, serah terima, laporan, dan audit — dengan pembatasan akses per peran.
 
-## About Laravel
+Dokumen acuan ada di `rules/` (PRD, ARCHITECTURE, SECURITY, TASK, TODO, AGENT, SKILLS)
+dan sistem visual di [`DESIGN.md`](DESIGN.md).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Peran dan hak akses
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Peran | Bisa |
+|---|---|
+| **Owner** | Semua fitur + kelola staf, pengaturan bisnis, tarif jasa, audit log, laporan seluruh rentang |
+| **Admin** | Servis, pelanggan, spare part, pembayaran, serah terima, laporan (pendapatan dibatasi hari berjalan) |
+| **Teknisi** | Pekerjaan yang ditugaskan: diagnosis, pengerjaan, pemakaian spare part, QC, dashboard & laporan sendiri |
+| **Customer** | Melacak servis miliknya, menyetujui/menolak estimasi, membayar via gateway, dashboard sendiri |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Akun Admin/Teknisi hanya dibuat lewat undangan Owner; akun Owner lewat `php artisan owner:buat`.
+Registrasi publik selalu menghasilkan akun Customer.
 
-## Learning Laravel
+## Kebutuhan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.3+ dengan ekstensi `pdo_mysql`, `gd`/`fileinfo`, `zip`
+- Composer 2
+- MySQL 8 (atau MariaDB setara)
+- Node.js 20 + npm (hanya untuk build aset Tailwind/Alpine)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalasi
 
 ```bash
-composer require laravel/boost --dev
+composer install
+cp .env.example .env
+php artisan key:generate
 
-php artisan boost:install
+# isi DB_* di .env, lalu:
+php artisan migrate --seed
+npm install && npm run build
+
+php artisan owner:buat            # atau: php artisan owner:buat --nama=... --email=... --password=...
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+`.env` wajib memuat `GATEWAY_WEBHOOK_SECRET` (rahasia HMAC webhook pembayaran).
+Tanpa nilai, aplikasi memakai default lokal `simulasi-rahasia-lokal` — **ganti sebelum produksi**.
 
-## Contributing
+## Data contoh (demo)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan db:seed --class=DemoSeeder
+```
 
-## Code of Conduct
+Membuat tiga akun (`admin@demo.test`, `teknisi@demo.test`, `customer@demo.test`, password
+`rahasia123`), satu pelanggan, tiga servis pada status berbeda (satu lunas & siap diambil,
+satu dikerjakan dan lewat SLA), serta spare part dengan stok awal.
+Seeder berhenti sendiri bila tabel `servis` sudah berisi data. **Jangan dipakai di produksi.**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Perintah artisan
 
-## Security Vulnerabilities
+| Perintah | Fungsi |
+|---|---|
+| `owner:buat` | Buat akun Owner (satu-satunya jalur membuat Owner) |
+| `pembayaran:kedaluwarsa` | Tandai pembayaran gateway yang melewati 24 jam sebagai gagal |
+| `db:seed --class=DemoSeeder` | Isi data demo |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Jalankan `pembayaran:kedaluwarsa` berkala (cron tiap jam) di produksi.
 
-## License
+## Pengujian
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan test          # atau: ./vendor/bin/pest
+./vendor/bin/pint --test  # gaya kode
+```
+
+Suite mencakup aturan peran, isolasi data antar pelanggan, transisi status, snapshot harga,
+penguncian stok, webhook HMAC, serah terima, dan laporan. Peta bukti tiap butir checklist
+keamanan ada di `rules/SECURITY.md` §9.
+
+## Struktur singkat
+
+```
+app/
+  Http/Controllers/{Admin,Teknisi,Pelanggan,Webhook}/   controller per peran
+  Http/Requests/                                        validasi + pesan Indonesia
+  Models/                                               entitas + aturan status
+  Services/                                             logika bisnis (satu tempat ubah status)
+  Policies/                                             izin per objek
+  Support/{Menu,format}.php                             menu per peran, helper rupiah/tanggal
+database/migrations/                                    skema; tabel append-only untuk audit/stok/pembayaran
+resources/views/{admin,teknisi,pelanggan,servis,cetak,laporan}/
+tests/Feature/                                          test per domain
+rules/                                                  spesifikasi produk, arsitektur, keamanan
+```
+
+## Catatan operasional
+
+- Foto servis disimpan di disk privat `local` dan disajikan lewat route ber-otorisasi.
+- `audit_log`, `webhook_log`, `pembayaran`, dan `mutasi_stok` hanya bertambah (INSERT);
+  koreksi dilakukan dengan baris baru (pembalikan / penyesuaian), bukan mengubah baris lama.
+- Semua perubahan `servis.status` lewat `ServisService::pindahStatus()` sehingga riwayat dan
+  audit selalu tercatat.
+- Nomor servis berurutan per tahun (`SRV-YYYY-NNNNN`) dan kode tracking acak 12 karakter.
+
+## Lisensi
+
+MIT.

@@ -64,6 +64,7 @@
     {{-- Pemakaian spare part (fitur 37). --}}
     <div class="border-t border-gray-200 pt-4">
         <h4 class="text-sm font-semibold text-gray-800">Spare part dipakai</h4>
+        <div class="overflow-x-auto">
         <table class="mt-2 min-w-full text-sm">
             <thead>
                 <tr class="text-left text-xs uppercase text-gray-500">
@@ -84,6 +85,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
 
         @if ($aksiSparepart)
             <form method="POST" action="{{ $aksiSparepart }}" class="mt-3 flex flex-wrap items-end gap-2">

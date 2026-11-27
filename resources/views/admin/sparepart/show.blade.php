@@ -35,9 +35,6 @@
             {{-- Fitur 38: penyesuaian stok manual (alasan wajib). --}}
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 mb-3">Penyesuaian stok</h3>
-                @if (session('status'))
-                    <div class="mb-3 bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded text-sm">{{ session('status') }}</div>
-                @endif
                 <form method="POST" action="{{ route('admin.sparepart.penyesuaian', $sparepart) }}" class="flex flex-wrap items-end gap-3">
                     @csrf
                     <div class="w-32">
@@ -60,6 +57,7 @@
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 mb-4">Riwayat mutasi stok</h3>
 
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-gray-500 border-b">
                         <tr>
@@ -88,6 +86,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>

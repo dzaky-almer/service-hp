@@ -5,12 +5,6 @@
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
-                    {{ session('status') }}
-                </div>
-            @endif
-
             <div class="bg-white shadow sm:rounded-lg p-6">
                 <h3 class="font-semibold text-gray-800 mb-1">Undang staf baru</h3>
                 <p class="text-sm text-gray-500 mb-4">

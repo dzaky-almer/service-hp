@@ -5,12 +5,6 @@
 
     <div class="py-8">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">
-                    {{ session('status') }}
-                </div>
-            @endif
-
             @if ($errors->any())
                 <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
                     {{ $errors->first() }}
@@ -80,6 +74,7 @@
                     @endif
                 </form>
 
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-gray-500 border-b">
                         <tr>
@@ -181,6 +176,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
 
                 <div class="mt-4">{{ $daftar->links() }}</div>
             </div>

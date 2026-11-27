@@ -38,6 +38,7 @@
 
             <div class="p-3 space-y-3">
                 @if ($e->status !== \App\Models\Estimasi::DRAF || ! $aksiSimpan)
+                    <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="text-xs uppercase text-gray-500">
                             <tr>
@@ -61,6 +62,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                     <p class="text-xs text-gray-500">
                         Dibuat {{ $e->pembuat?->nama ?? '—' }} · {{ $e->dibuat_pada?->format('d/m/Y H:i') }}
                         @if ($e->dikirim_pada) · dikirim {{ $e->dikirim_pada->format('d/m/Y H:i') }} @endif
