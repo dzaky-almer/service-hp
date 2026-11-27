@@ -8,6 +8,8 @@ use App\Models\Sparepart;
 use App\Models\TarifJasa;
 use App\Services\DiagnosisService;
 use App\Services\EstimasiService;
+use App\Services\PembayaranService;
+use App\Services\PengerjaanService;
 use App\Services\ServisService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -153,6 +155,35 @@ function tahap5Dikerjakan(): array
 {
     $uji = tahap5Disetujui();
     $uji['servis'] = app(ServisService::class)->pindahStatus($uji['servis']->refresh(), Servis::DIKERJAKAN, $uji['teknisi']);
+
+    return $uji;
+}
+
+/** Servis siap diambil: dikerjakan -> QC lulus -> siap diambil. */
+function tahap6SiapDiambil(): array
+{
+    $uji = tahap5Dikerjakan();
+    $pengerjaan = app(PengerjaanService::class);
+
+    $uji['servis'] = $pengerjaan->ubahStatus($uji['servis']->refresh(), Servis::QUALITY_CONTROL, $uji['teknisi']);
+    $pengerjaan->catatQc(
+        $uji['servis']->refresh(),
+        array_fill_keys(PengerjaanService::BUTIR_QC, 'lulus'),
+        $uji['teknisi'],
+    );
+    $uji['servis'] = $pengerjaan->siapDiambil($uji['servis']->refresh(), $uji['teknisi']);
+
+    return $uji;
+}
+
+/** Servis siap diambil dan lunas penuh (tunai dikonfirmasi Admin). */
+function tahap6Lunas(?float $nominal = null): array
+{
+    $uji = tahap6SiapDiambil();
+    $pembayaran = app(PembayaranService::class);
+
+    $bayar = $pembayaran->buat($uji['servis'], $nominal ?? $uji['servis']->totalTagihan(), 'tunai', $uji['admin']);
+    $pembayaran->konfirmasi($bayar, $uji['admin']);
 
     return $uji;
 }

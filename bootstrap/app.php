@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Akun non-aktif ditolak di semua route web. Kecuali logout, agar sesi
         // pengguna yang dinonaktifkan di tengah jalan tetap bisa ditutup.
         $middleware->web(append: [AkunAktif::class]);
+
+        // Webhook gateway tidak punya sesi; keaslian lewat HMAC (SECURITY.md §5).
+        $middleware->validateCsrfTokens(except: ['webhook/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

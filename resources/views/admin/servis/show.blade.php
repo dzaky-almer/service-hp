@@ -17,10 +17,6 @@
 
     <div class="py-8">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">{{ session('status') }}</div>
-            @endif
-
             <div class="grid gap-6 lg:grid-cols-3">
                 <div class="lg:col-span-2 bg-white shadow sm:rounded-lg p-6">
                     @include('servis._ringkasan')
@@ -147,6 +143,24 @@
                     'aksiSiapDiambil' => auth()->user()->can('ubah', $servis)
                         && $servis->status === \App\Models\Servis::QUALITY_CONTROL && $servis->qcLulusTerakhir()
                         ? route('admin.servis.siap-diambil', $servis) : null,
+                ])
+            </div>
+
+            {{-- Fitur 39–43: tagihan, pembayaran, konfirmasi, pembalikan. --}}
+            <div class="bg-white shadow sm:rounded-lg p-6">
+                <h3 class="font-semibold text-gray-800 mb-3">Tagihan &amp; pembayaran</h3>
+                @include('servis._tagihan', [
+                    'aksiBayar' => auth()->user()->can('kelola', $servis) ? route('admin.servis.pembayaran', $servis) : null,
+                    'metodePilihan' => \App\Models\Pembayaran::METODE,
+                    'aksiKelola' => auth()->user()->can('kelola', $servis),
+                ])
+            </div>
+
+            {{-- Fitur 44, 45: serah terima barang + bukti pengambilan. --}}
+            <div class="bg-white shadow sm:rounded-lg p-6">
+                <h3 class="font-semibold text-gray-800 mb-3">Serah terima</h3>
+                @include('servis._serah-terima', [
+                    'aksiSerah' => auth()->user()->can('kelola', $servis) ? route('admin.servis.serah-terima', $servis) : null,
                 ])
             </div>
 

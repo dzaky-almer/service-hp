@@ -8,10 +8,6 @@
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if (session('status'))
-                <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded">{{ session('status') }}</div>
-            @endif
-
             <div class="bg-white shadow sm:rounded-lg p-6">
                 @include('servis._ringkasan')
             </div>
@@ -52,6 +48,16 @@
                         'setujui' => fn ($e) => route('pelanggan.servis.estimasi.setujui', [$servis, $e]),
                         'tolak' => fn ($e) => route('pelanggan.servis.estimasi.tolak', [$servis, $e]),
                     ] : null,
+                ])
+            </div>
+
+            {{-- Fitur 39–40: tagihan dan pembayaran online pelanggan. --}}
+            <div class="bg-white shadow sm:rounded-lg p-6">
+                <h3 class="font-semibold text-gray-800 mb-3">Tagihan &amp; pembayaran</h3>
+                @include('servis._tagihan', [
+                    'aksiBayar' => auth()->user()->can('bayar', $servis) ? route('pelanggan.servis.bayar', $servis) : null,
+                    'metodePilihan' => ['gateway' => \App\Models\Pembayaran::METODE['gateway']],
+                    'aksiKelola' => false,
                 ])
             </div>
         </div>

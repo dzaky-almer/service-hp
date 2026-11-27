@@ -28,6 +28,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'gateway' => [
+        // Rahasia HMAC webhook pembayaran (fitur 42, SECURITY.md §5).
+        'secret' => env('GATEWAY_WEBHOOK_SECRET', 'simulasi-rahasia-lokal'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

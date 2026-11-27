@@ -51,6 +51,13 @@ class ServisPolicy
         return $pengguna->peran === Pengguna::PERAN_CUSTOMER && $this->pemilik($pengguna, $servis);
     }
 
+    /** Buat pembayaran (fitur 40): customer pemilik, Admin, Owner. Batas nominal di Service. */
+    public function bayar(Pengguna $pengguna, Servis $servis): bool
+    {
+        return in_array($pengguna->peran, [Pengguna::PERAN_ADMIN, Pengguna::PERAN_OWNER], true)
+            || ($pengguna->peran === Pengguna::PERAN_CUSTOMER && $this->pemilik($pengguna, $servis));
+    }
+
     private function pemilik(Pengguna $pengguna, Servis $servis): bool
     {
         return $servis->pelanggan?->id_pengguna === $pengguna->id_pengguna;

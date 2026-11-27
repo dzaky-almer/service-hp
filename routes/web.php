@@ -1,19 +1,28 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\DashboardController as DashboardAdminController;
+use App\Http\Controllers\Admin\LaporanController as LaporanAdminController;
 use App\Http\Controllers\Admin\PekerjaanController as PekerjaanAdminController;
 use App\Http\Controllers\Admin\PelangganController;
+use App\Http\Controllers\Admin\PembayaranController;
 use App\Http\Controllers\Admin\PengaturanController;
+use App\Http\Controllers\Admin\SerahTerimaController;
 use App\Http\Controllers\Admin\ServisController;
 use App\Http\Controllers\Admin\SparepartController;
 use App\Http\Controllers\Admin\StafController;
 use App\Http\Controllers\Admin\TarifJasaController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\FotoServisController;
+use App\Http\Controllers\Pelanggan\DashboardController as DashboardPelangganController;
 use App\Http\Controllers\Pelanggan\ServisController as ServisPelangganController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Publik\BerandaController;
 use App\Http\Controllers\Publik\LacakController;
+use App\Http\Controllers\Teknisi\DashboardController as DashboardTeknisiController;
+use App\Http\Controllers\Teknisi\LaporanController as LaporanTeknisiController;
 use App\Http\Controllers\Teknisi\PekerjaanController;
+use App\Http\Controllers\Webhook\PembayaranController as WebhookPembayaranController;
 use Illuminate\Support\Facades\Route;
 
 // Halaman publik (fitur 9, 10): info bisnis dan pelacakan status tanpa login.
@@ -26,8 +35,18 @@ Route::get('/lacak/{kode}', [LacakController::class, 'hasil'])
     ->name('publik.lacak.hasil');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return match (auth()->user()?->peran) {
+        'admin', 'owner' => redirect()->route('admin.dashboard'),
+        'teknisi' => redirect()->route('teknisi.dashboard'),
+        'customer' => redirect()->route('pelanggan.dashboard'),
+        default => view('dashboard'),
+    };
 })->middleware(['auth'])->name('dashboard');
+
+// Webhook gateway pembayaran (fitur 42): tanpa sesi, HMAC + rate limit.
+Route::post('/webhook/pembayaran', WebhookPembayaranController::class)
+    ->middleware('throttle:60,1')
+    ->name('webhook.pembayaran');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profil.edit');
@@ -42,6 +61,16 @@ Route::middleware('auth')->group(function () {
 
 // Area Admin dan Owner: master data pelanggan (fitur 11–14).
 Route::middleware(['auth', 'peran:admin,owner'])->prefix('admin')->name('admin.')->group(function () {
+    // Dashboard, laporan, dan audit (fitur 46–51, 53).
+    Route::get('dashboard', DashboardAdminController::class)->name('dashboard');
+    Route::get('servis/terlambat', [ServisController::class, 'terlambat'])->name('servis.terlambat');
+    Route::get('laporan/servis', [LaporanAdminController::class, 'servis'])->name('laporan.servis');
+    Route::get('laporan/pendapatan', [LaporanAdminController::class, 'pendapatan'])->name('laporan.pendapatan');
+    Route::get('laporan/performa-teknisi', [LaporanAdminController::class, 'performa'])->name('laporan.performa');
+    Route::get('laporan/statistik', [LaporanAdminController::class, 'statistik'])->name('laporan.statistik');
+    Route::get('laporan/{jenis}/export', [LaporanAdminController::class, 'export'])->name('laporan.export');
+    Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+
     Route::get('pelanggan', [PelangganController::class, 'index'])->name('pelanggan.index');
     Route::post('pelanggan', [PelangganController::class, 'store'])->name('pelanggan.store');
     Route::put('pelanggan/{pelanggan}', [PelangganController::class, 'update'])->name('pelanggan.update');
@@ -77,6 +106,14 @@ Route::middleware(['auth', 'peran:admin,owner'])->prefix('admin')->name('admin.'
     Route::post('servis/{servis}/sparepart', [ServisController::class, 'pakaiSparepart'])->name('servis.pakai-sparepart');
     Route::post('servis/{servis}/qc', [ServisController::class, 'qc'])->name('servis.qc');
     Route::post('servis/{servis}/siap-diambil', [ServisController::class, 'siapDiambil'])->name('servis.siap-diambil');
+
+    // Pembayaran & serah terima (fitur 39–45).
+    Route::post('servis/{servis}/pembayaran', [PembayaranController::class, 'store'])->name('servis.pembayaran');
+    Route::post('pembayaran/{pembayaran}/konfirmasi', [PembayaranController::class, 'konfirmasi'])->name('pembayaran.konfirmasi');
+    Route::post('pembayaran/{pembayaran}/tolak', [PembayaranController::class, 'tolak'])->name('pembayaran.tolak');
+    Route::post('pembayaran/{pembayaran}/pembalikan', [PembayaranController::class, 'pembalikan'])->name('pembayaran.pembalikan');
+    Route::post('servis/{servis}/serah-terima', [SerahTerimaController::class, 'store'])->name('servis.serah-terima');
+    Route::get('servis/{servis}/bukti-pengambilan', [SerahTerimaController::class, 'bukti'])->name('servis.bukti-pengambilan');
 });
 
 // Area Owner: staf, undangan, dan konfigurasi bisnis (SECURITY.md §2).
@@ -93,6 +130,7 @@ Route::middleware(['auth', 'peran:owner'])->prefix('admin')->name('admin.')->gro
 
 // Area pelanggan: servis miliknya sendiri (fitur 28–30).
 Route::middleware(['auth', 'peran:customer'])->prefix('pelanggan')->name('pelanggan.')->group(function () {
+    Route::get('dashboard', DashboardPelangganController::class)->name('dashboard');
     Route::get('servis', [ServisPelangganController::class, 'index'])->name('servis.index');
     Route::get('servis/{servis}', [ServisPelangganController::class, 'show'])->name('servis.show');
     Route::post('servis/{servis}/foto', [ServisPelangganController::class, 'foto'])->name('servis.foto');
@@ -100,10 +138,17 @@ Route::middleware(['auth', 'peran:customer'])->prefix('pelanggan')->name('pelang
     // Persetujuan estimasi (fitur 27): customer pemilik servis saja.
     Route::post('servis/{servis}/estimasi/{estimasi}/setujui', [ServisPelangganController::class, 'setujui'])->name('servis.estimasi.setujui');
     Route::post('servis/{servis}/estimasi/{estimasi}/tolak', [ServisPelangganController::class, 'tolak'])->name('servis.estimasi.tolak');
+
+    // Pembayaran online pelanggan (fitur 40): metode gateway saja.
+    Route::post('servis/{servis}/bayar', [ServisPelangganController::class, 'bayar'])->name('servis.bayar');
 });
 
 // Area teknisi: pekerjaan yang ditugaskan (fitur 23–27).
 Route::middleware(['auth', 'peran:teknisi'])->prefix('teknisi')->name('teknisi.')->group(function () {
+    Route::get('dashboard', DashboardTeknisiController::class)->name('dashboard');
+    Route::get('laporan/servis', [LaporanTeknisiController::class, 'laporan'])->name('laporan.servis');
+    Route::get('laporan/performa', [LaporanTeknisiController::class, 'performa'])->name('laporan.performa');
+    Route::get('laporan/statistik', [LaporanTeknisiController::class, 'statistik'])->name('laporan.statistik');
     Route::get('pekerjaan', [PekerjaanController::class, 'index'])->name('pekerjaan.index');
     Route::get('pekerjaan/{servis}', [PekerjaanController::class, 'show'])->name('pekerjaan.show');
     Route::put('pekerjaan/{servis}', [PekerjaanController::class, 'update'])->name('pekerjaan.update');

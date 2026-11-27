@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\FotoServisRequest;
 use App\Models\Estimasi;
 use App\Models\Servis;
 use App\Services\EstimasiService;
+use App\Services\PembayaranService;
 use App\Services\ServisService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -77,5 +78,25 @@ class ServisController extends Controller
         return redirect()
             ->route('pelanggan.servis.show', $servis)
             ->with('status', 'Estimasi ditolak.');
+    }
+
+    /** Pelanggan membuat pembayaran online (fitur 40). Hanya metode gateway. */
+    public function bayar(Request $request, Servis $servis, PembayaranService $pembayaran): RedirectResponse
+    {
+        $this->authorize('bayar', $servis);
+
+        $data = $request->validate([
+            'nominal' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
+        ], [
+            'nominal.required' => 'Nominal pembayaran wajib diisi.',
+            'nominal.numeric' => 'Nominal pembayaran harus berupa angka.',
+            'nominal.min' => 'Nominal pembayaran harus lebih dari 0.',
+        ]);
+
+        $baris = $pembayaran->buat($servis, (float) $data['nominal'], 'gateway', $request->user());
+
+        return redirect()
+            ->route('pelanggan.servis.show', $servis)
+            ->with('status', 'Pembayaran '.$baris->id_transaksi_eksternal.' dibuat, menunggu konfirmasi gateway.');
     }
 }

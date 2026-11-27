@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Service order (fitur 15–22). Satu baris = satu perangkat yang dititipkan.
@@ -170,6 +172,43 @@ class Servis extends Model
         return in_array($this->status, [self::DISETUJUI, self::DIKERJAKAN, self::QUALITY_CONTROL], true);
     }
 
+    /** Pembayaran & pembalikan (fitur 39–43), urut waktu. */
+    public function pembayaran(): HasMany
+    {
+        return $this->hasMany(Pembayaran::class, 'id_servis', 'id_servis')->orderBy('dibuat_pada')->orderBy('id_pembayaran');
+    }
+
+    /** Bukti serah terima (fitur 44), maksimal satu baris. */
+    public function pengambilan(): HasOne
+    {
+        return $this->hasOne(Pengambilan::class, 'id_servis', 'id_servis');
+    }
+
+    /** Total dibayar = bayar berhasil − pembalikan berhasil (ARCHITECTURE §3.1). */
+    public function totalDibayar(): float
+    {
+        $baris = $this->pembayaran()->where('status', Pembayaran::BERHASIL)->get();
+
+        return (float) $baris->sum(fn (Pembayaran $p) => $p->efek());
+    }
+
+    public function sisaTagihan(): float
+    {
+        return round($this->totalTagihan() - $this->totalDibayar(), 2);
+    }
+
+    /** Tagihan 0 (mis. dibatalkan) otomatis lunas. */
+    public function lunas(): bool
+    {
+        return $this->sisaTagihan() <= 0;
+    }
+
+    /** Serah terima hanya saat siap diambil, sudah lunas, dan belum pernah diserahkan. */
+    public function bolehSerahTerima(): bool
+    {
+        return $this->status === self::SIAP_DIAMBIL && $this->lunas() && $this->pengambilan()->doesntExist();
+    }
+
     /** Versi estimasi terakhir, apa pun statusnya (dipakai memilih draf/revisi). */
     public function estimasiTerakhir(): ?Estimasi
     {
@@ -203,6 +242,23 @@ class Servis extends Model
     public function bolehDiagnosis(): bool
     {
         return in_array($this->status, [self::MENUNGGU_DIAGNOSIS, self::DIKERJAKAN], true);
+    }
+
+    /**
+     * Servis yang lewat SLA dan belum di posisi akhir (ARCHITECTURE §3.1).
+     *
+     * @param  Builder<Servis>  $q
+     */
+    public function scopeTerlambat(Builder $q): void
+    {
+        $q->whereNotIn('status', [self::SIAP_DIAMBIL, self::SELESAI, self::DIBATALKAN, self::DITOLAK])
+            ->whereRaw('DATE_ADD(tanggal_masuk, INTERVAL sla_hari_salinan DAY) < ?', [now()]);
+    }
+
+    public function terlambat(): bool
+    {
+        return ! in_array($this->status, [self::SIAP_DIAMBIL, self::SELESAI, self::DIBATALKAN, self::DITOLAK], true)
+            && $this->tanggal_masuk->copy()->addDays($this->sla_hari_salinan)->isPast();
     }
 
     public function labelStatus(): string
